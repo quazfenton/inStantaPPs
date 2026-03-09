@@ -204,12 +204,20 @@ async fn resume_state(
 
     // Retrieve state from store
     let isa_state = state.state_store.get_state(&StateId(payload.state_id.clone())).await
-        .map_err(|e| (
-            StatusCode::NOT_FOUND,
-            Json(ApiErrorResponse {
-                error: format!("State not found: {}", e),
-            }),
-        ))?;
+        .map_err(|e| match e {
+            crate::state_store::StateStoreError::NotFound(_) => (
+                StatusCode::NOT_FOUND,
+                Json(ApiErrorResponse {
+                    error: format!("State not found: {}", payload.state_id),
+                }),
+            ),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiErrorResponse {
+                    error: format!("Failed to load state {}: {}", payload.state_id, e),
+                }),
+            ),
+        })?;
 
     // Create new VM for resume
     let mut vm_manager = state.vm_manager.write().await;
@@ -280,12 +288,20 @@ async fn fork_state(
 
     // Get original state
     let original_state = state.state_store.get_state(&StateId(payload.state_id.clone())).await
-        .map_err(|e| (
-            StatusCode::NOT_FOUND,
-            Json(ApiErrorResponse {
-                error: format!("State not found: {}", e),
-            }),
-        ))?;
+        .map_err(|e| match e {
+            crate::state_store::StateStoreError::NotFound(_) => (
+                StatusCode::NOT_FOUND,
+                Json(ApiErrorResponse {
+                    error: format!("State not found: {}", payload.state_id),
+                }),
+            ),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiErrorResponse {
+                    error: format!("Failed to load state {}: {}", payload.state_id, e),
+                }),
+            ),
+        })?;
 
     // Create forked state with new ID
     let forked_state_id = StateId(uuid::Uuid::new_v4().to_string());

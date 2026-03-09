@@ -743,8 +743,19 @@ impl UiStreamer {
 
 impl Drop for UiStreamer {
     fn drop(&mut self) {
-        let runtime = tokio::runtime::Handle::current();
-        runtime.block_on(self.stop());
+        // Avoid calling async code directly from Drop on whatever thread we're on.
+        // If we're outside any Tokio runtime, create a lightweight runtime just to stop cleanly.
+        if tokio::runtime::Handle::try_current().is_err() {
+            if let Ok(runtime) = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                let _ = runtime.block_on(self.stop());
+            }
+        } else {
+            // Inside an active runtime we can't safely block; require explicit stop() from callers.
+            warn!("UiStreamer was dropped inside an active Tokio runtime; call `stop().await` before dropping to shut down streaming cleanly.");
+        }
     }
 }
 

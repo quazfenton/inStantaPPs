@@ -265,9 +265,15 @@ impl DeterministicLogger {
 
     /// Clone logger for use in tracer callback
     fn clone_for_tracer(&self) -> Arc<Self> {
-        // This would require Arc wrapping of DeterministicLogger
-        // For now, this is a placeholder for the actual implementation
-        unimplemented!("Requires Arc<DeterministicLogger> refactoring")
+        // Create a new logger handle that shares the same underlying state.
+        Arc::new(Self {
+            config: self.config.clone(),
+            entries: self.entries.clone(),
+            sequence: self.sequence.clone(),
+            handlers: self.handlers.clone(),
+            recording: self.recording.clone(),
+        })
+    }
     }
 
     /// Log a syscall event from the tracer

@@ -256,21 +256,50 @@ impl StateSharer {
         session_id: &str,
         user_id: &str,
     ) -> Result<CollaborativeSession, ShareError> {
-        let mut sessions = self.sessions.write().await;
+        // First, take a snapshot of the session without holding a write lock
+        let session_snapshot = {
+            let sessions = self.sessions.read().await;
+            sessions.get(session_id).cloned()
+        };
 
-        if let Some(session) = sessions.get_mut(session_id) {
-            if session.status != SessionStatus::Active {
-                return Err(ShareError::SessionInactive(session_id.to_string()));
+        let mut session = match session_snapshot {
+            Some(s) => s,
+            None => return Err(ShareError::SessionNotFound(session_id.to_string())),
+        };
+
+        if session.status != SessionStatus::Active {
+            return Err(ShareError::SessionInactive(session_id.to_string()));
+        }
+
+        // Check permission without holding any lock on `sessions` to avoid deadlocks
+        if !self
+            .check_permission(&session.state_id, user_id, Permission::Read)
+            .await
+        {
+            return Err(ShareError::PermissionDenied {
+                user_id: user_id.to_string(),
+                required: Permission::Read,
+            });
+        }
+
+        // Re-acquire a write lock only to update the session participants and activity timestamp
+        {
+            let mut sessions = self.sessions.write().await;
+            if let Some(session_mut) = sessions.get_mut(session_id) {
+                if !session_mut.participants.contains(&user_id.to_string()) {
+                    session_mut.participants.push(user_id.to_string());
+                }
+                session_mut.last_activity = Utc::now();
+                session = session_mut.clone();
+            } else {
+                // Session was removed between the snapshot and update
+                return Err(ShareError::SessionNotFound(session_id.to_string()));
             }
+        }
 
-            // Check if user has read permission on the state
-            if !self.check_permission(&session.state_id, user_id, Permission::Read).await {
-                return Err(ShareError::PermissionDenied {
-                    user_id: user_id.to_string(),
-                    required: Permission::Read,
-                });
-            }
-
+        info!("User {} joined session {}", user_id, session_id);
+        Ok(session)
+    }
             if !session.participants.contains(&user_id.to_string()) {
                 session.participants.push(user_id.to_string());
             }

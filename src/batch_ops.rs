@@ -322,9 +322,13 @@ impl BatchManager {
     /// Update result in storage
     async fn update_result(operations: &RwLock<Vec<BatchResult>>, result: &BatchResult) {
         let mut ops = operations.write().await;
-        if let Some(pos) = ops.iter().position(|r| r.operation_id == result.operation_id) {
-            ops[pos] = result.clone();
+        if let Some(existing) = ops.iter_mut().find(|r| r.operation_id == result.operation_id) {
+            // Do not override a cancelled operation's status
+            if existing.status != BatchStatus::Cancelled {
+                *existing = result.clone();
+            }
         }
+    }
     }
 
     /// Execute delete operation
