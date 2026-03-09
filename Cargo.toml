@@ -1,0 +1,135 @@
+[package]
+name = "isa-workspace"
+version = "0.1.0"
+edition = "2021"
+description = "Instant-State Applications Platform - Sub-200ms state resume"
+license = "MIT"
+
+[[bin]]
+name = "isa-server"
+path = "src/main.rs"
+
+[[bin]]
+name = "isa-cli"
+path = "src/bin/cli.rs"
+
+[lib]
+name = "isa_workspace"
+path = "src/lib.rs"
+
+[dependencies]
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Error handling
+thiserror = "1.0"
+
+# Web framework
+axum = { version = "0.7", features = ["macros", "ws"] }
+
+# Async runtime
+tokio = { version = "1.37", features = ["full"] }
+
+# UUIDs
+uuid = { version = "1.8", features = ["v4", "serde"] }
+
+# Random number generation
+rand = "0.8"
+
+# Time
+chrono = { version = "0.4", features = ["serde", "clock"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# QUIC (quinn for QSSP)
+quinn = "0.11"
+rustls = "0.23"
+
+# Compression
+lz4_flex = "0.11"
+zstd = "0.13"
+flate2 = "1.0"
+
+# SHA256 for content-addressing
+sha2 = "0.10"
+hex = "0.4"
+
+# HTTP client for state store
+reqwest = { version = "0.12", features = ["json", "stream"] }
+
+# Bytes handling
+bytes = "1.6"
+
+# Async trait
+async-trait = "0.1"
+
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+
+# CPU count
+num_cpus = "1.16"
+
+# WebSocket
+futures = "0.3"
+
+# WebRTC media (actual RTP/RTCP)
+rtp = "0.9"
+rtcp = "0.10"
+
+# Metrics (parking_lot for RwLock)
+parking_lot = "0.12"
+
+# HTTP server (hyper)
+hyper = { version = "1.0", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+http = "1.0"
+
+# KVM bindings (Linux only)
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+kvm-bindings = "0.8"
+kvm-ioctls = "0.16"
+libc = "0.2"
+nix = { version = "0.27", features = ["ptrace", "process"] }
+
+# Linux x86_64 specific dependencies
+[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+# DRM (optional for UI streaming)
+drm-sys = "0.7"
+libdrm = { version = "0.0.2", optional = true }
+# FFmpeg (optional for video encoding)
+ffmpeg-next = { version = "7.0", optional = true }
+# Native WebRTC (optional)
+webrtc = { version = "0.9", optional = true }
+tokio-tungstenite = { version = "0.21", optional = true }
+futures-util = "0.3"
+# eBPF support (optional)
+libbpf-rs = { version = "0.24", optional = true }
+
+# libc for all Unix systems (needed for mkfifo, etc.)
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+# Encryption (all platforms)
+aes-gcm = "0.10"
+rand = "0.8"
+hmac = "0.12"
+
+[features]
+default = []
+drm = ["libdrm"]
+ffmpeg = ["ffmpeg-next"]
+native-webrtc = ["webrtc", "tokio-tungstenite"]
+libbpf = ["libbpf-rs"]
+full-ui = ["drm", "ffmpeg", "native-webrtc"]
+full-tracing = ["libbpf"]
+
+[dev-dependencies]
+axum = { version = "0.7", features = ["macros"] }
+serde_json = "1.0"
+tower = "0.5"
+tokio = { version = "1.37", features = ["full", "test-util"] }
