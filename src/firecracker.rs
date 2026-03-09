@@ -99,9 +99,15 @@ impl FirecrackerProcess {
 
     /// Kill the Firecracker process
     pub async fn kill(&mut self) -> Result<(), VMError> {
+        // Send the kill signal.
         self.child.kill().await.map_err(|e| {
             VMError::IoError(format!("Failed to kill Firecracker: {}", e))
-        })
+        })?;
+        // Reap the child process to avoid leaving a zombie.
+        self.child.wait().await.map_err(|e| {
+            VMError::IoError(format!("Failed to wait for Firecracker: {}", e))
+        })?;
+        Ok(())
     }
 
     /// Check if process is still running

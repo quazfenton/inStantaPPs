@@ -300,7 +300,8 @@ impl RtpSession {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap();
         let ntp_secs = (now.as_secs() + 2208988800) as u32; // Convert to NTP epoch
-        let ntp_frac = ((now.subsec_nanos() as u64) << 32 / 1_000_000_000) as u32;
+        // Convert sub-second nanoseconds to NTP fractional units
+        let ntp_frac = ((now.subsec_nanos() as u64 * (1u64 << 32)) / 1_000_000_000) as u32;
         
         let stats = self.stats.read().await;
         

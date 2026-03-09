@@ -674,10 +674,12 @@ mod tests {
     use super::*;
 
     #[test]
+    #[test]
     #[cfg(not(target_os = "linux"))]
     fn test_drm_not_available() {
         let result = DrmCapture::new();
-        assert!(result.is_err());
+        // On non-Linux we provide a virtual framebuffer, so construction should succeed.
+        assert!(result.is_ok());
     }
 
     #[test]

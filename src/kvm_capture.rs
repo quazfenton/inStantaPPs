@@ -631,13 +631,18 @@ pub struct MsrEntry {
 
 /// KVM MSR structure helper
 #[repr(C)]
+///
+/// This must match the kernel's `struct kvm_msrs` layout: a header followed
+/// by an inline array of `kvm_msr_entry` elements.
+#[repr(C)]
 struct kvm_msrs {
     nmsrs: u32,
     pad: u32,
-    entries: Box<[kvm_msr_entry; 100]>,
+    entries: [kvm_msr_entry; 100],
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 struct kvm_msr_entry {
     index: u32,
     reserved: u32,
@@ -646,12 +651,16 @@ struct kvm_msr_entry {
 
 impl kvm_msrs {
     fn new(n: u32) -> Self {
-        let entries = vec![kvm_msr_entry {
-            index: 0,
-            reserved: 0,
-            data: 0,
-        }; n as usize];
-        
+        // Clamp to our fixed capacity to avoid overruns.
+        let n = n.min(100);
+        Self {
+            nmsrs: n,
+            pad: 0,
+            entries: [kvm_msr_entry {
+                index: 0,
+                reserved: 0,
+                data: 0,
+            }; 100],
         Self {
             nmsrs: n,
             pad: 0,

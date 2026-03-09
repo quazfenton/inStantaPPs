@@ -124,8 +124,9 @@ impl Userfaultfd {
     /// Read a userfaultfd event
     #[cfg(target_os = "linux")]
     pub fn read_event(&self) -> Result<Option<UffdEvent>, UserfaultfdError> {
-        let mut msg: uffd_msg = unsafe { ptr::read_bytes(0, std::mem::size_of::<uffd_msg>()) };
-        
+        // Initialize the message buffer safely before reading into it.
+        let mut msg: uffd_msg = unsafe { std::mem::zeroed() };
+    
         let ret = unsafe {
             libc_read(self.fd, &mut msg as *mut _ as *mut c_void, std::mem::size_of::<uffd_msg>())
         };

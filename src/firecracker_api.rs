@@ -110,7 +110,8 @@ impl FirecrackerClient {
         let action = InstanceAction {
             action_type: "Pause".to_string(),
         };
-        self.put("/vm", &action).await
+        // Firecracker expects pause/resume actions on the /actions endpoint
+        self.put("/actions", &action).await
     }
 
     /// Resume the VM
@@ -118,7 +119,9 @@ impl FirecrackerClient {
         let action = InstanceAction {
             action_type: "Resume".to_string(),
         };
-        self.put("/vm", &action).await
+        // Firecracker expects pause/resume actions on the /actions endpoint
+        self.put("/actions", &action).await
+    }
     }
 
     /// Stop the VM (send Ctrl+Alt+Del)

@@ -366,27 +366,18 @@ impl MemorySnapshotManager {
     }
 
     /// Prefetch hot pages for fast resume
+    /// Prefetch hot pages for fast resume
     pub async fn prefetch_hot_pages(&self, region_id: &str) -> Result<Vec<MemoryPage>, MemoryError> {
-        let tracker = self.regions.get(region_id)
+        // Ensure the region exists so we can return a clear error if not.
+        let _tracker = self.regions.get(region_id)
             .ok_or_else(|| MemoryError::NotFound(format!("Region {} not found", region_id)))?;
 
-        let temperature_map = tracker.classify_temperature();
-        let mut hot_pages = Vec::new();
-
-        // Use reverse index for O(1) page lookup instead of O(n) scan
+        // We currently don't have per-page metadata linking cache entries back to
+        // region/page offsets. As a best-effort, prefetch all cached pages, which
+        // is at least a superset of the hot working set instead of always empty.
         let cache = self.page_cache.read().await;
-        let reverse_index = self.build_reverse_index(&cache).await;
-
-        for &page_offset in &temperature_map.hot_pages {
-            let page_addr = tracker.page_address(page_offset);
-            let cache_key = format!("{}-{}", region_id, page_offset);
-
-            // O(1) lookup using reverse index
-            if let Some(page_hash) = reverse_index.get(&cache_key) {
-                if let Some(page) = cache.get(page_hash) {
-                    hot_pages.push(page.clone());
-                }
-            }
+        Ok(cache.values().cloned().collect())
+    }
         }
 
         Ok(hot_pages)
