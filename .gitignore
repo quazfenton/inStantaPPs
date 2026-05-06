@@ -1,0 +1,95 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# Install files
+install
+install.sh
+install.bat
+install.ps1
+*.install
+.installed
+
+# Build artifacts
+/target/
+**/target/
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+/tmp/
+temp/
+*.tmp
+*.temp
+
+# Test artifacts
+coverage/
+*.gcno
+*.gcda
+
+# Binary files
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (for browser-plugin)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Rust specific
+Cargo.lock
+**/Cargo.lock
+
+# Firecracker artifacts
+*.mem
+*.state
+firecracker.sock
+*.fifo
+
+# Local configuration
+config.local.toml
+*.local.toml
+
+# Secrets and keys
+*.pem
+*.key
+*.crt
+secrets/
