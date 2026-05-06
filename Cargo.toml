@@ -36,7 +36,7 @@ tokio = { version = "1.37", features = ["full"] }
 uuid = { version = "1.8", features = ["v4", "serde"] }
 
 # Random number generation
-rand = "0.8"
+rand = "0.9"
 
 # Time
 chrono = { version = "0.4", features = ["serde", "clock"] }
@@ -92,7 +92,7 @@ http = "1.0"
 # KVM bindings (Linux only)
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 kvm-bindings = "0.8"
-kvm-ioctls = "0.16"
+kvm-ioctls = "0.19"
 libc = "0.2"
 nix = { version = "0.27", features = ["ptrace", "process"] }
 
@@ -116,7 +116,7 @@ libc = "0.2"
 
 # Encryption (all platforms)
 aes-gcm = "0.10"
-rand = "0.8"
+rand = "0.9"
 hmac = "0.12"
 
 [features]
